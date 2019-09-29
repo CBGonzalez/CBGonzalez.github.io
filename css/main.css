@@ -7,10 +7,16 @@ nav ul, footer ul {
     padding: 0px;
     list-style: none;
     font-weight: bold;
+    color: #0000FF;
 }
+
+nav ul a {
+    color: #0000CD;
+}
+
 nav ul li, footer ul li {
     display: inline;
-    margin-right: 20px;
+    margin-right: 20px;    
 }
 a {
     text-decoration: none;
@@ -24,8 +30,8 @@ h1 {
     font-family:'Helvetica', 'Arial', 'Sans-Serif';
 }
 p {
-    font-size: 1.5em;
-    line-height: 1.4em;
+    font-size: 1.0em;
+    line-height: 1.0em;
     color: #333;
 }
 footer {
@@ -35,9 +41,14 @@ footer {
 
 ul.posts { 
     margin: 20px auto 40px; 
-    font-size: 1.5em;
+    font-size: 1.0em;
 }
 
 ul.posts li {
     list-style: none;
+    color: #B3B3B3;
+}
+
+ul.posts a {
+    color: #006400;
 }
