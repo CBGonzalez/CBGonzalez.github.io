@@ -1,4 +1,7 @@
-name: CBGonzalez blog
-title: CBGonzalez blog
+name: Some random stuff 
+title: Random bits & bytes
+author: C. B. Gonzalez
 markdown: kramdown
 permalink: /blog/:year/:month/:day/:title
+theme: minima
+

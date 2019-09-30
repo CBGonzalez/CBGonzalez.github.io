@@ -8,7 +8,7 @@ Taking the new `System.Runtime.Intrinsics` namespace for a spin and comparing it
 
 > Code for these benchmarks is [here in github repo](https://github.com/CBGonzalez/Core3Intrinsics-Intro).
 
-#### Contents ####
+### Contents ###
 - [Introduction to Intrinsics](#Intro)
 - [First steps](#First)
 - [Loading and storing data](#Load)
@@ -21,7 +21,7 @@ Taking the new `System.Runtime.Intrinsics` namespace for a spin and comparing it
 
 --------------------------------------
 --------------------------------------
-#### <a name="Intro"/>Introduction to Intrinsics ####
+### <a name="Intro"/>Introduction to Intrinsics ###
 
 The new functionality (available in Net Core 3.0 and beyond) under the `System.Runtime.Intrinsics` namespace will open up some the Intel and AMD processor intrinsics (see [Intel´s full guide here](https://software.intel.com/sites/landingpage/IntrinsicsGuide))) and a [Microsoft blog entry](https://devblogs.microsoft.com/dotnet/hardware-intrinsics-in-net-core/) by Tanner Gooding on the subject. The coverage is not 100% but I imagine it will grow further as time passes. ARM processor support is in the future.
 
@@ -29,7 +29,7 @@ In a nutshell, the new functionality expands SIMD processing beyond what´s poss
 
 --------------------------------------
 --------------------------------------
-#### <a name="First"/> First steps ####
+### <a name="First"/> First steps ###
 
 You prepare your code by adding some `using` statements:
 ```C#
@@ -126,9 +126,9 @@ This gives you the exact description of the operation(s) being performed and als
 
 --------------------------------------
 --------------------------------------
-#### <a name="Load"/> Loading and storing data ####
+### <a name="Load"/> Loading and storing data ###
 
-##### Creating Vectors
+#### Creating Vectors ####
 
 As seen above, you can create vectors one-by-one using the various `Create` functions. Another possibility is to use the (unsafe) `Loadxxx()` functions.
 
@@ -173,7 +173,7 @@ R = UnpackLow(A, B)
      |  A0  |  B0  |  A1  |  B1  |  A4  |  B4  |  A5  |  B5  |
      |------|------|------|------|------|------|------|------|
 ```
-##### Vectors from Arrays #####
+#### Vectors from Arrays ####
 
 Many times you´ll use the intrinsics for huge amounts of data, so a more practical approach to create vectors could be:
 
@@ -222,7 +222,7 @@ You can also go `unsafe` and loop through pointers, of course:
 ```
 No performance difference on my machine, though.
 
-##### Using intrinsics to copy memory? A disappointment... #####
+#### Using intrinsics to copy memory? A disappointment... ####
 
 Although moving data around using vectors seems pretty efficient, I was surprised to measure `System.Runtime.CompilerServices.Unsafe.CopyBlock(ref byte destination, ref byte source, uint byteCount)` as faster, independently of data size (i.e. even data far bigger than cache will be copied efficiently). Of course it´s unsafe in the sense that you need to know what you are doing (not `unsafe` though).
 
@@ -240,7 +240,7 @@ An impressive 32 - 43% advantage... It shows that a properly optimized scalar me
 
 --------------------------------------
 --------------------------------------
-#### <a name="Aligned"/> Aligned vs. Unaligned Memory
+### <a name="Aligned"/> Aligned vs. Unaligned Memory
 
 If you look through the different `Load...` instructions available, you´ll notice that you have, for example, `LoadVector256(T*)` and `LoadAlignedVector256(T*)`.
 
@@ -260,7 +260,7 @@ There´s really no meaningful difference for bigger data chunks.
 
 --------------------------------------
 --------------------------------------
-#### <a name="Cache"/> Dataset Sizes vs Caches ####
+### <a name="Cache"/> Dataset Sizes vs Caches ###
 
 Often overlooked, the size of your datasets may have an important impact on your processing times (apart from the obvious increase in elements): if all data fits in a processor core´s cache and only a few operations will be performed per data point, then memory acces times will be crucial and you´ll notice a non-linear increase in processing time vs. data size.
 
@@ -268,7 +268,7 @@ Often overlooked, the size of your datasets may have an important impact on your
 
 --------------------------------------
 --------------------------------------
-#### <a name="Basic"/> Basic Floating Point Math Operations ####
+### <a name="Basic"/> Basic Floating Point Math Operations ###
 
 As mentioned above, `System.Runtime.Intrinsics.X86` contains the SSE, AVX etc. functionality. You can add, substract, multiply and divide all kinds of vectors. 
 
@@ -276,7 +276,7 @@ You also have `Sqrt` and `ReciprocalSqrt`, `Min` and `Max`, they all do what you
 
 Some more exotic operations are:
 
-##### AddSubtract #####
+#### AddSubtract ####
 *__m256d _mm256_addsub_pd (__m256d a, __m256d b)*
 
 ``` C#
@@ -300,7 +300,7 @@ Some more exotic operations are:
 ```
 
 
-##### DotProduct #####
+#### DotProduct ####
 
 *__m256 _mm256_dp_ps (__m256 a, __m256 b, const int imm8)*
 
@@ -354,7 +354,7 @@ bit mask = b7 b6 b5 b4 0 0 0 1
 
 > :warning: You should do some benchmarking before using this instruction, its performance doesn´t seem to be too hot.
 
-##### Floor, Ceiling #####
+#### Floor, Ceiling ####
  These do what you expect:
 
 ``` C#
@@ -367,7 +367,7 @@ bit mask = b7 b6 b5 b4 0 0 0 1
 
 In order to have finer control you also have `RoundToNearestInteger` , `RoundToNegativeInfinity` etc.
 
-##### Horizontal Add, Subtract #####
+#### Horizontal Add, Subtract ####
 
 *__m256 _mm256_hadd_ps (__m256 a, __m256 b)*
 
@@ -398,7 +398,7 @@ R = HorizontalAdd(A, B)
   
 ```
 
-##### FMA - Fused Multiply Operations #####
+#### FMA - Fused Multiply Operations ####
 
 *__m256 _mm256_fmadd_ps* etc.
 
@@ -415,11 +415,11 @@ These instructions will combine multiplies with add or substract in several vari
 
 --------------------------------------
 --------------------------------------
-#### <a name="Compare"/> Vector Comparisons #### 
+### <a name="Compare"/> Vector Comparisons ### 
 
 There are several intrinsics to compare vectors.
 
-##### Vector results
+#### Vector results
 
 A set of `Sse.Compare...` exist for **128-bit vectors**:
 
@@ -487,25 +487,25 @@ For each element in the third parameter (`mask`), `BlendVariable` will pick the 
 In the above snippet, `left`[0] = `-1.0f`, `right`[0] = `0.0f`. The mask is `0` (false) at this position, so the result vector´s first position gets the value from the **first** vector: `-1.0f`.
 
 
-##### Scalar Results #####
+#### Scalar Results ####
 
 As mentioned above, there are some intrinsics to compare values that return a scalar (`int` or `bool`): `TestZ`, `TestC` etc and `MoveMask`.
 
 --------------------------------------
 --------------------------------------
 
-#### <a name="Missing"/> What´s Missing? #### 
+### <a name="Missing"/> What´s Missing? ### 
 
 There are no [trigonometric functions](https://software.intel.com/sites/landingpage/IntrinsicsGuide/#cats=Trigonometry) as yet: cosine, sine etc. are all missing. Maybe some others, but that´s the category that caught my eye.
 
 --------------------------------------
 --------------------------------------
 
-#### <a name="benchmarks"/> Benchmark Results ####
+### <a name="benchmarks"/> Benchmark Results ###
 
 Some benchmarks, with small data sizes (i. e. the data should fit into L2 cache) and larger sizes (i. e. 10 x L3 cachesize ) on my machine.
 
-##### FMA with `floats` #####
+#### FMA with `floats` ####
 
 
 A simple scalar loop:
@@ -583,7 +583,7 @@ The processor will likely prefetch data while it performs operations, i´d assum
 `Vector<T>` is slower, as expected, partly (probably) because it doesn´t implement `Fma` and partly since we are using safe code and the loop will be slowed down by range-checks.
 
 
-##### Mixed `float` operations #####
+#### Mixed `float` operations ####
 
 The [Mandelbrot set](https://en.wikipedia.org/wiki/Mandelbrot_set) is an all-time favorite to show off parallel processing. On my machine I get the following results for a 1920 X 1080 image (this is just generating values, not creating a bitmap):
 
@@ -594,7 +594,7 @@ The [Mandelbrot set](https://en.wikipedia.org/wiki/Mandelbrot_set) is an all-tim
 
 A 5.3x speedup is nice! The vector loop could probably be further optimized though, I just did a naïve translation of the scalar code.
 
-##### Some `int` Operations #####
+#### Some `int` Operations ####
 
 Some basic integer operations show an average 1.5  - 1.6x speed increase with intrinsics for one operation, probably illustrating that modern processors are already very good at handling ints and, again perhaps, memory access times.
 
