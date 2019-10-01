@@ -4,4 +4,7 @@ author: C. B. Gonzalez
 markdown: kramdown
 permalink: /blog/:year/:month/:day/:title
 theme: minima
+plugins:
+   - jemoji
+
 
