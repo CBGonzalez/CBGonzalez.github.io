@@ -3,14 +3,15 @@ layout: post
 title: Introduction to Core 3 Intrinsics in C#, with Benchmarks
 excerpt: Taking the new System.Runtime.Intrinsics namespace for a spin and comparing it to scalar and vector operations.
 date: 2019-09-20
+categories: [netcore, SIMD, intrinsics]
 ---
 Taking the new `System.Runtime.Intrinsics` namespace for a spin and comparing it to scalar `float` and `Vector<float>` operations.
 
-> Code for these benchmarks is [here in github repo](https://github.com/CBGonzalez/Core3Intrinsics-Intro).
+> Code for the benchmarks is [here in my github repo](https://github.com/CBGonzalez/Core3Intrinsics-Intro), along with examples.
 
 ### Contents ###
 - [Introduction to Intrinsics](#Intro)
-- [First steps](#First)
+- [Namespaces](#First)
 - [Loading and storing data](#Load)
 - [Aligned vs. Unaligned Memory](#Aligned)
 - [Dataset Sizes vs Caches](#Cache)
@@ -29,9 +30,8 @@ In a nutshell, the new functionality expands SIMD processing beyond what´s poss
 
 --------------------------------------
 --------------------------------------
-### <a name="First"/> First steps ###
+### <a name="First"/> Namespaces ###
 
-You prepare your code by adding some `using` statements:
 ```C#
 using System.Runtime.Intrinsics
 using System.Runtime.Intrinsics.X86
@@ -40,60 +40,11 @@ using System.Runtime.Intrinsics.X86
 
 The classes offer functions for creating and transforming vectors: `Vector256.Create(1.0f)` creates a new `Vector256<float>`, with every component `float` initialized to `1.0f`, `Vector128.AsByte<float>(someVector128<float>)` creates a new vector128<byte>, casting the `float` values to `byte`. Also, you can create vectors using `Create` and explicitly passing all elements.
 
-```C#
-using System.Runtime.Intrinsics;
-
-namespace Core3Intrinsics
-{
-    public class Intro
-    {
-        public Intro()
-        {
-            Vector128<float> middleVector = Vector128.Create(1.0f);  // middleVector = <1,1,1,1>
-            middleVector = Vector128.CreateScalar(-1.0f);  // middleVector = <-1,0,0,0>
-            Vector64<byte> floatBytes = Vector64.AsByte(Vector64.Create(1.0f, -1.0f)); // floatBytes = <0, 0, 128, 63, 0, 0, 128, 63>
-            Vector256<float> left = Vector256.Create(-1.0f, -2.0f, -3.0f, -4.0f, -5.0f, -6.0f, - 7.0f, -8.0f);
-        }
-    }
-}
-```
-
 `Intrinsics.X86` contains the SIMD namespaces, like SSE and AVX. It can be quite daunting (see [Microsoft´s documentation here](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.x86?view=netcore-3.0)) since it does not contain any explanation of the functionality. For functions like `Add` it might not be necessary but the `Blend` name itself is not necessarily enlightening (unless you are already familiar with Intel´s intrinsincs.)
 
 All namespaces within `Intrinsics.X86` contain a static `IsSupported` `bool`: if `true` all is well and the platform supports the specific functionality (i. e. AVX2). If `false`, you are on your own, no software fallback is provided. If your code does not check for availability and happens to run on a hardware platform which does not support the functionality you are using, a `PlatformNotSupportedException` will be thrown at runtime.
 
 These namespaces contain all the currently supported SIMD functions, like `Add`, `LoadVector256` and many more.
-
-```C#
-using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
-
-namespace Core3Intrinsics
-{
-    public class Intro
-    {
-        public Intro()
-        {            
-            if(Avx.IsSupported)
-            {
-                var left = Vector256.Create(-2.5f);
-                var right = Vector256.Create(5.0f);
-                Vector256<float> result = Avx.Add(left, right); // result = <2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5>
-                result = Avx.Multiply(left, right); // result = <-12.5, -12.5, -12.5, -12.5, -12.5, -12.5, -12.5, -12.5>
-
-                double[] someDoubles = new double[] { 1.0, 3.0, -2.5, 7.5, 10.8, 0.33333 };
-                unsafe
-                {
-                    fixed (double* ptr = &someDoubles[1])
-                    {
-                        Vector256<double> res2 = Avx.LoadVector256(ptr); // res2 = <3, -2.5, 7.5, 10.8>
-                    }
-                }
-            }
-        }
-    }
-}
-```
 
 The [documentation](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.x86?view=netcore-3.0) contains the intrinsic function used by the processor (for `Add(Vector256<Single>, Vector256<Single>)` for example, the instruction is `__m256 _mm256_add_ps (__m256 a, __m256 b)`). This comes in handy in order to find the equivalent instruction in the [Intel guide](https://software.intel.com/sites/landingpage/IntrinsicsGuide/#expand=884,287,2825,136&text=_mm256_add_ps):
 
@@ -130,9 +81,9 @@ This gives you the exact description of the operation(s) being performed and als
 
 #### Creating Vectors ####
 
-As seen above, you can create vectors one-by-one using the various `Create` functions. Another possibility is to use the (unsafe) `Loadxxx()` functions.
+You can create vectors one-by-one using the various `Create` functions. Another possibility is to use the (unsafe) `Loadxxx()` functions.
 
-Storing data can be achieved with Storexx.
+Storing data can be achieved with `Storexx`.
 
 ``` C#
                 double[] someDoubles = new double[] { 1.0, 3.0, -2.5, 7.5, 10.8, 0.33333 };
@@ -222,29 +173,13 @@ You can also go `unsafe` and loop through pointers, of course:
 ```
 No performance difference on my machine, though.
 
-#### Using intrinsics to copy memory? A disappointment... ####
-
-Although moving data around using vectors seems pretty efficient, I was surprised to measure `System.Runtime.CompilerServices.Unsafe.CopyBlock(ref byte destination, ref byte source, uint byteCount)` as faster, independently of data size (i.e. even data far bigger than cache will be copied efficiently). Of course it´s unsafe in the sense that you need to know what you are doing (not `unsafe` though).
-
-```
-|                        Method | numberOfBytes |           Mean |         Error |        StdDev |         Median | Ratio | RatioSD |
-|------------------------------ |-------------- |---------------:|--------------:|--------------:|---------------:|------:|--------:|
-|              ScalarStoreBlock |         16384 |       306.1 ns |      8.539 ns |     12.246 ns |       302.8 ns |  1.00 |    0.00 |
-|        VectorStoreArrayMemPtr |         16384 |       401.3 ns |      8.049 ns |     12.998 ns |       397.5 ns |  1.32 |    0.07 |
-
-|              ScalarStoreBlock |       8388608 | 1,106,074.5 ns | 17,544.390 ns | 14,650.360 ns | 1,107,074.2 ns |  1.00 |    0.00 |
-|        VectorStoreArrayMemPtr |       8388608 | 1,573,258.0 ns | 34,312.238 ns | 44,615.601 ns | 1,561,962.8 ns |  1.43 |    0.05 |
-
-```
-An impressive 32 - 43% advantage... It shows that a properly optimized scalar method (probably using some very smart assembly instructions) beats a naïve vectorization with ease.
-
 --------------------------------------
 --------------------------------------
 ### <a name="Aligned"/> Aligned vs. Unaligned Memory
 
 If you look through the different `Load...` instructions available, you´ll notice that you have, for example, `LoadVector256(T*)` and `LoadAlignedVector256(T*)`.
 
-> :warning: The "Aligned" part refers to memory alignment of the pointer to the beginning of the <T> data: in order to use the `LoadAligned` version of the functions, your data needs to start at a specific boundary: for 256 bit vectors (32 bytes), the data ***needs*** to start at a location (pointer address) that is a multiple of 32 (for 128 bit vectors it needs to be aligned at 16 byte boundaries). Failure to do so can result in a runtime ***general protection fault***.
+> :warning: The "Aligned" part refers to memory alignment of the pointer to the beginning of the <T> data: in order to use the `LoadAligned` version of the functions, your data needs to start at a specific boundary: for 256 bit vectors (32 bytes), the data **needs** to start at a location (pointer address) that is a multiple of 32 (for 128 bit vectors it needs to be aligned at 16 byte boundaries). Failure to do so can result in a runtime **general protection fault**.
 
 In the past, aligned data used to work much better that unaligned data, but modern processors don´t really care, as long as your data is aligned to the natural OS´s boundary in order to avoid stradling cache line or page boundaries (see [this comment by T. Gooding](https://devblogs.microsoft.com/dotnet/hardware-intrinsics-in-net-core/#comment-2942), for example) 
 
@@ -555,6 +490,7 @@ Intel Core i7-4500U CPU 1.80GHz (Haswell), 1 CPU, 4 logical and 2 physical cores
 
 
 ```
+
 |                        Method | ParamCacheSizeBytes |         Mean |       Error |      StdDev | Ratio | RatioSD |
 |------------------------------ |-------------------- |-------------:|------------:|------------:|------:|--------:|
 |        **MultiplyAddScalarFloat** |              **262144** |    **20.128 us** |   **0.5597 us** |   **0.8377 us** |  **1.00** |    **0.00** |
