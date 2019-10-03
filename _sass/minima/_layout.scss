@@ -209,7 +209,48 @@
   @include relative-font-size(1.5);
 }
 
+/**
+ * Two column main
+ */
 
+.main-col-wrapper {
+  /* background: #eeeeee; */
+  @include relative-font-size(0.9375);
+  color: $text-color;  
+  margin-left: -$spacing-unit / 2;
+  @extend %clearfix;
+}
+
+.main-col {
+  float: left;
+}
+
+.main-col-1 {
+  /* background: #ffffe6; */
+  width: -webkit-calc(75% - (#{$spacing-unit} / 2));
+  width:         calc(75% - (#{$spacing-unit} / 2));
+}
+
+.main-col-2 {
+  /* background: #e6f2ff; */
+  padding-left: 20px;
+  width: -webkit-calc(25% - (#{$spacing-unit} / 2));
+  width:         calc(25% - (#{$spacing-unit} / 2));
+}
+
+/**
+ * Tags
+ */
+
+.tag-content {
+  border-radius: 10px;
+  /* border: 1px solid #0000ff; */
+  /* color: #0000ff; */
+  background: #e6f2ff;
+  padding: 2px;
+  margin: 2px;
+  float: left;
+}
 
 /**
  * Posts

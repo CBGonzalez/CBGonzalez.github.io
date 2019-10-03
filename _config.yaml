@@ -1,6 +1,7 @@
 name: Some random stuff 
 title: Random bits & bytes
 author: C. B. Gonzalez
+show_excerpts: true
 github_username: CBGonzalez
 markdown: kramdown
 permalink: /blog/:year/:month/:day/:title
