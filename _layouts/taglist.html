@@ -4,7 +4,8 @@ layout: default
 
 <div class="home">
 <div class="wrapper">
- {% for category in site.categories %}
+ {% assign ordered_cats = site.categories | sort %}
+ {% for category in ordered_cats %}
   <h3><a name="{{ category[0] }}"></a>{{ category[0] }}</h3>
   <ul>
     {% for post in category[1] %}
