@@ -7,6 +7,8 @@ categories: [.net, MVVM]
 ---
 While preparing to work for a "real" WPF app I needed to teach myself MVVM. This project is the result of it. There are probably many different ways to achieve a similar result, so don´t take anything here for dogma.
 
+> The source code is available in [my repository](https://github.com/CBGonzalez/NetNewsTicker).
+
 #### Contents ####
 - [The View - Model - Model View (MVVM) pattern](#MVVM)
 - [The Ticker](#Ticker)
